@@ -1,0 +1,6 @@
+version: "3.8"
+services:
+  chat-app:
+    image: louvandtech/quote-bot:latest
+    container_name: quote-bot
+    restart: always
