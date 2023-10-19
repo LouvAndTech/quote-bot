@@ -4,12 +4,12 @@ FROM golang:1.19.3-alpine3.16 AS build
 WORKDIR /
 
 # Copy the dependencies list
-COPY ./go.mod ./
-COPY ./go.sum ./
+COPY ./src/go.mod ./
+COPY ./src/go.sum ./
 # Install dependencies
 RUN go mod download
 #Copy the backend code
-COPY ./*.go ./
+COPY ./src/*.go ./
 # Build the backend
 RUN CGO_ENABLED=0 go build -o ./bot-exe
 
