@@ -1,16 +1,18 @@
 package main
 
 import (
-	"encoding/json"
+	"errors"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"math/rand"
-	"net/http"
+	"strings"
 	"time"
 
 	"github.com/bwmarrin/discordgo"
 )
+
+var ErrNoChannel = errors.New("Your server does not have a citation channel")
+var ErrNoCitation = errors.New("No Citation found")
 
 /*====== Citation ======*/
 //Format the citation into a string
@@ -21,10 +23,10 @@ func formatCitation(citation string, author string, date string) string {
 	} else {
 		t, _ = time.Parse("2-1-2006", date)
 	}
+	strings.ReplaceAll(citation, "*", "_")
 	output := fmt.Sprintf(">>> *%s*\n**%s** | *%s*", citation, author, t.Format("02.01.2006"))
 	log.Printf("Format citation : %s", output)
 	return output
-
 }
 
 // Use a button to citationised a message
@@ -47,31 +49,75 @@ func citationisation(i *discordgo.InteractionCreate) string {
 	return output
 }
 
-type Citation struct {
-	Text   string
-	Author string
-}
-
-func getCitation() Citation {
-	response, err := http.Get("https://type.fit/api/quotes")
+func findCitationChannelID(session *discordgo.Session, guildID string) (string, error) {
+	// Get all channels for the guild
+	channels, err := session.GuildChannels(guildID)
 	if err != nil {
-		fmt.Print(err.Error())
+		return "", err
 	}
 
-	responseData, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		log.Fatal(err)
+	// Loop through all channels
+	for _, channel := range channels {
+		// Check if the channel name contains "citation" (case-insensitive)
+		if strings.Contains(strings.ToLower(channel.Name), "citation") {
+			return channel.ID, nil
+		}
 	}
 
-	var citations []Citation
-	json.Unmarshal(responseData, &citations)
-	//log.Printf("citation 1 : \ntext : %s\nauthor : %s", citations[0].Text, citations[0].Author)
-	//log.Printf("nb citation : %d", len(citations))
-	return citations[rand.Intn(len(citations))]
+	// Return empty string if no matching channel is found
+	return "", ErrNoChannel
 }
 
-func sendCitation() string {
-	citation := getCitation()
-	output := fmt.Sprintf("> *%s*\n> **%s**", citation.Text, citation.Author)
-	return output
+func getBotMessagesInChannel(s *discordgo.Session, channelID string) ([]*discordgo.Message, error) {
+	var botMessages []*discordgo.Message
+	// Get the bot's ID from the session state
+	botID := s.State.User.ID
+
+	// Discord allows fetching up to 100 messages at a time, so we'll need to paginate
+	limit := 100
+	var lastMessageID string
+
+	for {
+		// Fetch messages with an optional "before" message ID for pagination
+		messages, err := s.ChannelMessages(channelID, limit, lastMessageID, "", "")
+		if err != nil {
+			return nil, err
+		}
+
+		// If there are no more messages, we are done
+		if len(messages) == 0 {
+			break
+		}
+
+		// Filter messages sent by the bot
+		for _, message := range messages {
+			if message.Author != nil && message.Author.ID == botID {
+				botMessages = append(botMessages, message)
+			}
+		}
+
+		// Set the ID of the last message to paginate
+		lastMessageID = messages[len(messages)-1].ID
+	}
+
+	if len(botMessages) == 0 {
+		return botMessages, ErrNoCitation
+	}
+
+	return botMessages, nil
+}
+
+func getCitation(session *discordgo.Session, channel_id string, guildID string) (string, error) {
+	output := ""
+	messageList, err := getBotMessagesInChannel(s, channel_id)
+
+	if err != nil {
+		return "", err
+	}
+
+	// Pick a random element
+	randomIndex := rand.Intn(len(messageList)) // random index between 0 and len(list)-1
+	output = messageList[randomIndex].Content
+	output += fmt.Sprintf("\nLink: https://discord.com/channels/%s/%s/%s", guildID, messageList[randomIndex].ChannelID, messageList[randomIndex].ID)
+	return output, nil
 }

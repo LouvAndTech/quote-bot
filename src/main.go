@@ -13,7 +13,7 @@ import (
 // Bot parameters
 var (
 	BotToken       *string
-	GuildID        = flag.String("guild", "", "Test guild ID. If not passed - bot registers commands globally")
+	GuildID        = flag.String("guild", "", "Guild ID. If not passed - bot registers commands globally")
 	RemoveCommands = flag.Bool("rmcmd", true, "Remove all commands after shutdowning or not")
 )
 
@@ -29,7 +29,7 @@ func init() {
 	var err error
 
 	if os.Getenv("TOKEN") == "" {
-		log.Fatalf("You need to pass the bot token as an argument")
+		log.Fatalf("You need to pass the bot TOKEN as an env")
 	}
 	BotToken = flag.String("token", os.Getenv("TOKEN"), "Bot access token")
 
