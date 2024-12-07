@@ -23,8 +23,7 @@ func formatCitation(citation string, author string, date string) string {
 	} else {
 		t, _ = time.Parse("2-1-2006", date)
 	}
-	strings.ReplaceAll(citation, "*", "_")
-	output := fmt.Sprintf(">>> *%s*\n**%s** | *%s*", citation, author, t.Format("02.01.2006"))
+	output := fmt.Sprintf(">>> %s\n**%s** | *%s*", citation, author, t.Format("02.01.2006"))
 	log.Printf("Format citation : %s", output)
 	return output
 }
