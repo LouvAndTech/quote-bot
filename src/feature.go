@@ -3,7 +3,6 @@ package main
 import (
 	"errors"
 	"fmt"
-	"log"
 	"math/rand"
 	"strings"
 	"time"
@@ -23,9 +22,9 @@ func formatCitation(citation string, author string, date string) string {
 	} else {
 		t, _ = time.Parse("2-1-2006", date)
 	}
-	strings.ReplaceAll(citation, "*", "_")
-	output := fmt.Sprintf(">>> *%s*\n**%s** | *%s*", citation, author, t.Format("02.01.2006"))
-	log.Printf("Format citation : %s", output)
+	citation = strings.ReplaceAll(citation, "\\n", "\n")
+	output := fmt.Sprintf(">>> %s\n**%s** | *%s*", citation, author, t.Format("02.01.2006"))
+	//log.Printf("Format citation : %s", output) //DEBUG
 	return output
 }
 
