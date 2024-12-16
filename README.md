@@ -1,16 +1,42 @@
-# Citatinization 
-![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/louvandtech/quote-bot/docker-build.yml?style=for-the-badge)
+<p align="center">
+  <a href="icon.png" target="_blank">
+    <img src="icon.png" alt="Logo" width="128" height="128">
+  </a>
+</p>
+
+# Quote Bot
+![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/louvandtech/quote-bot/docker-build-push.yml?style=for-the-badge)
 
 
 
-## What is Citatinization?
-It is a bot that will help you format you quotes quickly and easily 
+## What is Quote Bot?
+It is a bot that will help you format you quotes quickly and easily for your discord server.
+It is also able to give you a random quote from your own serer.
 
-It also as a feature to get a random quote
+### It's particularly:
+It does not have any serverside database, and rely on discord's own server to store the quotes, which means that the quotes are only available in the server where the bot is invited and cannot be query from outside.
 
 ## How to use it?
 
-First of all, invite the bot to your server by clicking [here](https://discord.com/api/oauth2/authorize?client_id=1090565153495453716&permissions=11264&scope=bot)
+### Invite the bot to your server:
+1. First of all, invite the bot to your server by clicking [here](https://discord.com/api/oauth2/authorize?client_id=1090565153495453716&permissions=11264&scope=bot). 
+2. Then You need to create a channel that include `quotes` in it's name in your server.
 
-- Then, you can use the bot by typing `/citationisation` to format your quotes
-- And you can type `/citation` to get a random quote
+After that you are ready to go: 
+- You can use the bot by typing `/quotization` to format your quotes
+- You can type `/quote` to get a random quote
+
+### Host it yourself?
+You can find the docker image [here](https://hub.docker.com/r/louvandtech/quote-bot)
+
+To deploy the bot, you can use the following `docker-compose.yml` file:
+```yaml
+version: "3.8"
+services:
+  quote-bot:
+    image: louvandtech/quote-bot:latest
+    container_name: quote-bot
+    restart: unless-stopped
+    environment:
+      TOKEN: <YOUR-DISCORD-TOKEN>
+```
