@@ -5,7 +5,14 @@
 </p>
 
 # Quote Bot
-![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/louvandtech/quote-bot/docker-build-push.yml?style=for-the-badge)
+![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/louvandtech/quote-bot/docker-build-push.yml?style=for-the-badge&label=Build%20%26%20Push)
+![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/louvandtech/quote-bot/docker-build-validation.yml?style=for-the-badge&label=Build%20on%20main)
+
+![Docker Pulls](https://img.shields.io/docker/pulls/louvandtech/quote-bot?style=for-the-badge)
+![Docker Image Size (latest by date)](https://img.shields.io/docker/image-size/louvandtech/quote-bot?style=for-the-badge)
+![Docker Image Version (latest by date)](https://img.shields.io/docker/v/louvandtech/quote-bot?style=for-the-badge)
+
+![GitHub License](https://img.shields.io/github/license/louvandtech/quote-bot?style=for-the-badge)
 
 
 
