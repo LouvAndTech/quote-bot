@@ -2,6 +2,8 @@ name: "✅[Docker]build validation"
 
 on:
   push:
+    branches:
+      - main
   pull_request:
       
 
