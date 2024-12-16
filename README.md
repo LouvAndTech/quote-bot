@@ -1,4 +1,7 @@
 # Citatinization 
+![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/louvandtech/quote-bot/docker-build.yml?style=for-the-badge)
+
+
 
 ## What is Citatinization?
 It is a bot that will help you format you quotes quickly and easily 
