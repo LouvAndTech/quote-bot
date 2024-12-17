@@ -1,4 +1,4 @@
-name: docker-build
+name: "🚀[Docker]build and push"
 
 on:
   push:
@@ -6,8 +6,8 @@ on:
       - 'v*.*'
 
 jobs:
-  docker:
-    runs-on: ubuntu-latest
+  build-push:
+    runs-on: ubuntu-24.04
     steps:
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3

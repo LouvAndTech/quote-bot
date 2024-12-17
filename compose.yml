@@ -1,6 +1,8 @@
 version: "3.8"
 services:
-  chat-app:
+  quote-bot:
     image: louvandtech/quote-bot:latest
     container_name: quote-bot
-    restart: always
+    restart: unless-stopped
+    environment:
+      TOKEN: <YOUR-DISCORD-TOKEN>
