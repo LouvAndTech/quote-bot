@@ -15,19 +15,19 @@ var (
 
 	commands = []*discordgo.ApplicationCommand{
 		{
-			Name:        "citationisation",
-			Description: "Auto format citation",
+			Name:        "quotization",
+			Description: "Auto format quote",
 			Options: []*discordgo.ApplicationCommandOption{
 				{
 					Type:        discordgo.ApplicationCommandOptionString,
-					Name:        "citation",
-					Description: "The text of the citation",
+					Name:        "quote",
+					Description: "The text of the quote",
 					Required:    true,
 				},
 				{
 					Type:        discordgo.ApplicationCommandOptionString,
 					Name:        "author",
-					Description: "The author of the citation",
+					Description: "The author of the quote",
 					Required:    true,
 				},
 				{
@@ -69,20 +69,24 @@ var (
 			},
 		},*/
 		{
-			Name:        "citation",
-			Description: "Give you a random citation",
+			Name:        "quote",
+			Description: "Give you a random quote from the server",
 		},
 		{
 			Name: "instant_quote",
 			Type: 3,
 		},
+		{
+			Name: "remove_quote",
+			Type: 3,
+		},
 	}
 
 	commandHandlers = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
-		"citationisation": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+		"quotization": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			content, flags := "An error occured", discordgo.MessageFlags(1<<6)
 			// get the channel ID
-			channel_id, err := findCitationChannelID(s, i.GuildID)
+			channel_id, err := findQuoteChannelID(s, i.GuildID)
 			if err != nil {
 				if errors.Is(err, ErrNoChannel) {
 					content = err.Error()
@@ -98,7 +102,7 @@ var (
 				if len(i.ApplicationCommandData().Options) >= 3 {
 					date = i.ApplicationCommandData().Options[2].StringValue()
 				}
-				content = formatCitation(citation, auteur, date)
+				content = formatQuote(citation, auteur, date)
 				flags = discordgo.MessageFlags(0)
 			} else {
 				content = "Wrong channel"
@@ -114,10 +118,10 @@ var (
 		/* "correct_citationisation": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			log.Print("TEST")
 		},*/
-		"citation": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+		"quote": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			content, flags := "An error occured", discordgo.MessageFlags(1<<6)
 			// get the channel ID
-			channel_id, err := findCitationChannelID(s, i.GuildID)
+			channel_id, err := findQuoteChannelID(s, i.GuildID)
 			if err != nil {
 				if errors.Is(err, ErrNoChannel) {
 					content = err.Error()
@@ -150,8 +154,8 @@ var (
 			})
 		},
 		"instant_quote": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
-			msg := citationisation(i)
-			channel_id, err := findCitationChannelID(s, i.GuildID)
+			msg := quotization(i)
+			channel_id, err := findQuoteChannelID(s, i.GuildID)
 			content := "An error occured"
 			if err != nil {
 				if errors.Is(err, ErrNoChannel) {
@@ -171,11 +175,43 @@ var (
 				},
 			})
 		},
+		"remove_quote": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+			err := removeQuote(s, i)
+			content := "An error occured"
+			if err != nil {
+				if errors.Is(err, ErrPermMsg) {
+					content = err.Error()
+				} else {
+					log.Println(err)
+				}
+			} else {
+				content = "Message removed"
+			}
+			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+				Type: discordgo.InteractionResponseChannelMessageWithSource,
+				Data: &discordgo.InteractionResponseData{
+					Content: content,
+					Flags:   1 << 6,
+				},
+			})
+		},
 	}
 )
 
 func init() {
 	s.AddHandler(func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+		defer func() {
+			if r := recover(); r != nil {
+				log.Printf("Recovered from panic: %v", r)
+				s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+					Type: discordgo.InteractionResponseChannelMessageWithSource,
+					Data: &discordgo.InteractionResponseData{
+						Content: "An unexpected error occurred. Please try again later.",
+						Flags:   1 << 6,
+					},
+				})
+			}
+		}()
 		if h, ok := commandHandlers[i.ApplicationCommandData().Name]; ok {
 			h(s, i)
 		}

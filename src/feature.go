@@ -10,12 +10,13 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
-var ErrNoChannel = errors.New("Your server does not have a citation channel")
-var ErrNoCitation = errors.New("No Citation found")
+var ErrNoChannel = errors.New("Your server does not have a quote channel")
+var ErrNoCitation = errors.New("No quote found")
+var ErrPermMsg = errors.New("You don't have the permission to interact with this message")
 
 /*====== Citation ======*/
 //Format the citation into a string
-func formatCitation(citation string, author string, date string) string {
+func formatQuote(citation string, author string, date string) string {
 	var t time.Time
 	if date == "NONE" {
 		t = time.Now().In(cstParis)
@@ -29,7 +30,7 @@ func formatCitation(citation string, author string, date string) string {
 }
 
 // Use a button to citationised a message
-func citationisation(i *discordgo.InteractionCreate) string {
+func quotization(i *discordgo.InteractionCreate) string {
 	//Convert the data to something usable
 	data := i.ApplicationCommandData()
 	//We need to get the key to wich message we want to use
@@ -44,11 +45,11 @@ func citationisation(i *discordgo.InteractionCreate) string {
 	user := fmt.Sprintf("<@!%s>", data.Resolved.Messages[keys[0]].Author.ID)
 	date := data.Resolved.Messages[keys[0]].Timestamp.Format("2-1-2006")
 	// Format the output
-	output := formatCitation(cit, user, date)
+	output := formatQuote(cit, user, date)
 	return output
 }
 
-func findCitationChannelID(session *discordgo.Session, guildID string) (string, error) {
+func findQuoteChannelID(session *discordgo.Session, guildID string) (string, error) {
 	// Get all channels for the guild
 	channels, err := session.GuildChannels(guildID)
 	if err != nil {
@@ -119,4 +120,37 @@ func getCitation(session *discordgo.Session, channel_id string, guildID string) 
 	output = messageList[randomIndex].Content
 	output += fmt.Sprintf("\nLink: https://discord.com/channels/%s/%s/%s", guildID, messageList[randomIndex].ChannelID, messageList[randomIndex].ID)
 	return output, nil
+}
+
+func removeQuote(session *discordgo.Session, i *discordgo.InteractionCreate) error {
+	//Convert the data to something usable
+	//log.Println("Removing quote")
+	data := i.ApplicationCommandData()
+
+	// Get the message ID
+	keys := make([]string, len(data.Resolved.Messages))
+	iteration := 0
+	for k := range data.Resolved.Messages {
+		keys[iteration] = k
+		iteration++
+	}
+
+	// We get every data we need from the API
+	quote := data.Resolved.Messages[keys[0]]
+
+	// Make sure that the message is from the bot
+	if quote.Author.ID != s.State.User.ID {
+		return ErrPermMsg
+	}
+
+	// Make sure the person that asked the bot to remove the message is the same person that asked the bot originally
+	original_user := quote.Interaction.User.ID
+	if original_user != i.Member.User.ID {
+		return ErrPermMsg
+	}
+
+	// Delete the message
+	err := s.ChannelMessageDelete(quote.ChannelID, quote.ID)
+
+	return err
 }

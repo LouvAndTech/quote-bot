@@ -37,8 +37,6 @@ func init() {
 	if err != nil {
 		log.Fatalf("Invalid bot parameters: %v", err)
 	}
-	// Retrieve the citation channel ID from the environment variable
-	//var citationChannelID := os.Getenv("CITATION_CHANNEL_ID")
 
 }
 
