@@ -15,7 +15,7 @@ var (
 
 	commands = []*discordgo.ApplicationCommand{
 		{
-			Name:        "quotatization",
+			Name:        "quotization",
 			Description: "Auto format quote",
 			Options: []*discordgo.ApplicationCommandOption{
 				{
@@ -76,10 +76,14 @@ var (
 			Name: "instant_quote",
 			Type: 3,
 		},
+		{
+			Name: "remove_quote",
+			Type: 3,
+		},
 	}
 
 	commandHandlers = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
-		"quotatization": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+		"quotization": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			content, flags := "An error occured", discordgo.MessageFlags(1<<6)
 			// get the channel ID
 			channel_id, err := findQuoteChannelID(s, i.GuildID)
@@ -171,11 +175,43 @@ var (
 				},
 			})
 		},
+		"remove_quote": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+			err := removeQuote(s, i)
+			content := "An error occured"
+			if err != nil {
+				if errors.Is(err, ErrPermMsg) {
+					content = err.Error()
+				} else {
+					log.Println(err)
+				}
+			} else {
+				content = "Message removed"
+			}
+			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+				Type: discordgo.InteractionResponseChannelMessageWithSource,
+				Data: &discordgo.InteractionResponseData{
+					Content: content,
+					Flags:   1 << 6,
+				},
+			})
+		},
 	}
 )
 
 func init() {
 	s.AddHandler(func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+		defer func() {
+			if r := recover(); r != nil {
+				log.Printf("Recovered from panic: %v", r)
+				s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+					Type: discordgo.InteractionResponseChannelMessageWithSource,
+					Data: &discordgo.InteractionResponseData{
+						Content: "An unexpected error occurred. Please try again later.",
+						Flags:   1 << 6,
+					},
+				})
+			}
+		}()
 		if h, ok := commandHandlers[i.ApplicationCommandData().Name]; ok {
 			h(s, i)
 		}

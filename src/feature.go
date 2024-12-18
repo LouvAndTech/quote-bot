@@ -12,6 +12,7 @@ import (
 
 var ErrNoChannel = errors.New("Your server does not have a quote channel")
 var ErrNoCitation = errors.New("No quote found")
+var ErrPermMsg = errors.New("You don't have the permission to interact with this message")
 
 /*====== Citation ======*/
 //Format the citation into a string
@@ -119,4 +120,37 @@ func getCitation(session *discordgo.Session, channel_id string, guildID string) 
 	output = messageList[randomIndex].Content
 	output += fmt.Sprintf("\nLink: https://discord.com/channels/%s/%s/%s", guildID, messageList[randomIndex].ChannelID, messageList[randomIndex].ID)
 	return output, nil
+}
+
+func removeQuote(session *discordgo.Session, i *discordgo.InteractionCreate) error {
+	//Convert the data to something usable
+	//log.Println("Removing quote")
+	data := i.ApplicationCommandData()
+
+	// Get the message ID
+	keys := make([]string, len(data.Resolved.Messages))
+	iteration := 0
+	for k := range data.Resolved.Messages {
+		keys[iteration] = k
+		iteration++
+	}
+
+	// We get every data we need from the API
+	quote := data.Resolved.Messages[keys[0]]
+
+	// Make sure that the message is from the bot
+	if quote.Author.ID != s.State.User.ID {
+		return ErrPermMsg
+	}
+
+	// Make sure the person that asked the bot to remove the message is the same person that asked the bot originally
+	original_user := quote.Interaction.User.ID
+	if original_user != i.Member.User.ID {
+		return ErrPermMsg
+	}
+
+	// Delete the message
+	err := s.ChannelMessageDelete(quote.ChannelID, quote.ID)
+
+	return err
 }
